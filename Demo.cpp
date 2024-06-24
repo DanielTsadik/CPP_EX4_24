@@ -62,13 +62,19 @@ int main()
 
     cout << tree; // Should print the graph using GUI.
 
+    Node<double> root_node_1 = Node(1.1);
     Tree<double,3> three_ary_tree; // 3-ary tree.
-    three_ary_tree.add_root(root_node);
-    three_ary_tree.add_sub_node(root_node, n1);
-    three_ary_tree.add_sub_node(root_node, n2);
-    three_ary_tree.add_sub_node(root_node, n3);
-    three_ary_tree.add_sub_node(n1, n4);
-    three_ary_tree.add_sub_node(n2, n5);
+    three_ary_tree.add_root(root_node_1);
+    Node<double> n12 = Node(1.2);
+    Node<double> n22 = Node(1.3);
+    Node<double> n32 = Node(1.4);
+    Node<double> n42 = Node(1.5);
+    Node<double> n52 = Node(1.6);
+    three_ary_tree.add_sub_node(root_node, n12);
+    three_ary_tree.add_sub_node(root_node, n22);
+    three_ary_tree.add_sub_node(root_node, n32);
+    three_ary_tree.add_sub_node(n12, n42);
+    three_ary_tree.add_sub_node(n22, n52);
 
      // The tree should look like:
     /**
