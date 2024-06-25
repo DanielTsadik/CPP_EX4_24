@@ -1,24 +1,20 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall
 LDFLAGS = -lsfml-graphics -lsfml-window -lsfml-system
-TARGET_MAIN = main
-TARGET_TEST = test
-MAIN_OBJS = main.o
-TEST_OBJS = test.o
 
-all: $(TARGET_MAIN) $(TARGET_TEST)
+all: main test
 
-$(TARGET_MAIN): $(MAIN_OBJS)
-	$(CXX) $(CXXFLAGS) -o $(TARGET_MAIN) $(MAIN_OBJS) $(LDFLAGS)
+main: main.o
+	$(CXX) $(CXXFLAGS) -o main main.o $(LDFLAGS)
 
-$(TARGET_TEST): $(TEST_OBJS)
-	$(CXX) $(CXXFLAGS) -o $(TARGET_TEST) $(TEST_OBJS)
+test: test.o
+	$(CXX) $(CXXFLAGS) -o test test.o $(LDFLAGS)
 
-main.o: main.cpp tree.hpp node.hpp complex.hpp
+main.o: main.cpp
 	$(CXX) $(CXXFLAGS) -c main.cpp
 
-test.o: test.cpp tree.hpp node.hpp complex.hpp doctest.h
+test.o: test.cpp
 	$(CXX) $(CXXFLAGS) -c test.cpp
 
 clean:
-	rm -f $(TARGET_MAIN) $(TARGET_TEST) $(MAIN_OBJS) $(TEST_OBJS)
+	rm -f main test *.o

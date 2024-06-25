@@ -53,11 +53,8 @@ int main() {
         cout << node->get_value() << endl;
     }
 
-    cout << "Converting tree to heap..." << endl;
-    tree.myHeap();
-
     cout << "Heap traversal:" << endl;
-    for (auto node = tree.begin_heap(); node != tree.end_heap(); ++node) {
+    for (auto node = tree.myHeap(); node != tree.end_heap(); ++node) {
         cout << node->get_value() << endl;
     }
 
@@ -112,12 +109,8 @@ int main() {
         cout << node->get_value() << endl;
     }
 
-    cout << "Converting 3-ary tree to heap..." << endl;
-    three_ary_tree.myHeap();
-
-    cout << "Heap traversal (3-ary tree):" << endl;
-
-    for (auto node = three_ary_tree.begin_heap(); node != three_ary_tree.end_heap(); ++node) {
+    cout << "Heap traversal:" << endl;
+    for (auto node = three_ary_tree.myHeap(); node != three_ary_tree.end_heap(); ++node) {
         cout << node->get_value() << endl;
     }
 

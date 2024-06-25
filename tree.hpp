@@ -10,6 +10,8 @@
 #include <SFML/Graphics.hpp>
 #include "node.hpp"
 #include <map>
+#include "complex.hpp"
+#include <sstream>
 
 template <typename T>
 class Tree
@@ -26,8 +28,7 @@ public:
     {
         if (!root)
         {
-            std::cerr << "Error: Root not set." << std::endl;
-            return;
+            throw std::runtime_error("Error: Root not set.");
         }
 
         Node<T> *parentNode = find_node(root, parent.get_value());
@@ -37,8 +38,14 @@ public:
         }
         else
         {
-            std::cerr << "Parent node not found." << std::endl;
+            throw std::runtime_error("Parent node not found.");
         }
+    }
+
+    template <typename U>   
+    void add_sub_node(Node<T> &parent, Node<U> &child)
+    {
+        throw std::runtime_error("Child node type does not match");
     }
 
     ~Tree()
@@ -98,107 +105,108 @@ public:
         return pre_order_iterator(nullptr, k);
     }
 
+    // Post-order iterator
     class post_order_iterator
-{
-public:
-    explicit post_order_iterator(Node<T> *node, size_t k) : k(k), current(nullptr)
     {
-        if (node)
+    public:
+        explicit post_order_iterator(Node<T> *node, size_t k) : current(nullptr), k(k)
+        {
+            if (node)
+            {
+                if (k == 2)
+                {
+                    pushLeftmostPath(node);
+                }
+                else
+                {
+                    nodes.push(node);
+                }
+            }
+            ++(*this); // Move to the first valid node
+        }
+
+        bool operator!=(const post_order_iterator &other) const
+        {
+            return current != other.current;
+        }
+
+        Node<T> *operator->() const
+        {
+            return current;
+        }
+
+        Node<T> &operator*() const
+        {
+            return *current;
+        }
+
+        post_order_iterator &operator++()
         {
             if (k == 2)
             {
-                pushLeftmostPath(node);
-            }
-            else
-            {
-                nodes.push(node);
-            }
-        }
-        ++(*this); // Move to the first valid node
-    }
-
-    bool operator!=(const post_order_iterator &other) const
-    {
-        return current != other.current;
-    }
-
-    Node<T> *operator->() const
-    {
-        return current;
-    }
-
-    Node<T> &operator*() const
-    {
-        return *current;
-    }
-
-    post_order_iterator &operator++()
-    {
-        if (k == 2)
-        {
-            if (!nodes.empty())
-            {
-                Node<T> *node = nodes.top();
-                nodes.pop();
                 if (!nodes.empty())
                 {
-                    Node<T> *parent = nodes.top();
-                    if (parent->get_children().size() > 1 && node == parent->get_children()[0])
+                    Node<T> *node = nodes.top();
+                    nodes.pop();
+                    if (!nodes.empty())
                     {
-                        pushLeftmostPath(parent->get_children()[1]);
+                        Node<T> *parent = nodes.top();
+                        if (parent->get_children().size() > 1 && node == parent->get_children()[0])
+                        {
+                            pushLeftmostPath(parent->get_children()[1]);
+                        }
                     }
+                    current = node;
                 }
-                current = node;
-            }
-            else
-            {
-                current = nullptr;
-            }
-        }
-        else
-        {
-            if (!nodes.empty())
-            {
-                Node<T> *node = nodes.top();
-                nodes.pop();
-                for (auto it = node->get_children().rbegin(); it != node->get_children().rend(); ++it)
+                else
                 {
-                    if (*it)
-                    {
-                        nodes.push(*it);
-                    }
+                    current = nullptr;
                 }
-                current = node;
             }
             else
             {
-                current = nullptr;
+                if (!nodes.empty())
+                {
+                    Node<T> *node = nodes.top();
+                    nodes.pop();
+                    for (auto it = node->get_children().rbegin(); it != node->get_children().rend(); ++it)
+                    {
+                        if (*it)
+                        {
+                            nodes.push(*it);
+                        }
+                    }
+                    current = node;
+                }
+                else
+                {
+                    current = nullptr;
+                }
             }
+            return *this;
         }
-        return *this;
-    }
 
-private:
-    std::stack<Node<T> *> nodes;
-    Node<T> *current;
-    size_t k;
+    private:
+        std::stack<Node<T> *> nodes;
+        Node<T> *current;
+        size_t k;
 
-    void pushLeftmostPath(Node<T> *node)
-    {
-        while (node)
+        void pushLeftmostPath(Node<T> *node)
         {
-            nodes.push(node);
-            if (!node->get_children().empty())
+            while (node)
             {
-                node = node->get_children()[0];
-            }
-            else
-            {
-                break;
+                nodes.push(node);
+                if (!node->get_children().empty())
+                {
+                    node = node->get_children()[0];
+                }
+                else
+                {
+                    break;
+                }
             }
         }
-    }
-};
+    };
 
     post_order_iterator begin_post_order() const
     {
@@ -420,11 +428,8 @@ private:
         {
             if (node)
             {
-                Tree::flatten_to_vector(node, heap_nodes);
-                std::make_heap(heap_nodes.begin(), heap_nodes.end(), [](Node<T> *a, Node<T> *b)
-                               {
-                                   return a->get_value() > b->get_value(); // Min-heap
-                               });
+                collect_nodes(node);
+                std::make_heap(heap_nodes.begin(), heap_nodes.end(), CompareNodes());
             }
         }
 
@@ -447,28 +452,38 @@ private:
         {
             if (!heap_nodes.empty())
             {
-                std::pop_heap(heap_nodes.begin(), heap_nodes.end(), [](Node<T> *a, Node<T> *b)
-                              { return a->get_value() > b->get_value(); });
+                std::pop_heap(heap_nodes.begin(), heap_nodes.end(), CompareNodes());
                 heap_nodes.pop_back();
             }
             return *this;
         }
 
     private:
+        struct CompareNodes
+        {
+            bool operator()(Node<T> *a, Node<T> *b)
+            {
+                return a->get_value() > b->get_value();
+            }
+        };
+
+        void collect_nodes(Node<T> *node)
+        {
+            if (node)
+            {
+                heap_nodes.push_back(node);
+                for (auto child : node->get_children())
+                {
+                    collect_nodes(child);
+                }
+            }
+        }
+
         std::vector<Node<T> *> heap_nodes;
     };
 
-    void myHeap()
-    {
-        std::vector<Node<T> *> heap_nodes;
-        flatten_to_vector(root, heap_nodes);
-        std::make_heap(heap_nodes.begin(), heap_nodes.end(), [](Node<T> *a, Node<T> *b)
-                       {
-                           return a->get_value() > b->get_value(); // For min-heap
-                       });
-    }
-
-    heap_iterator begin_heap() const
+    // In the Tree class
+    heap_iterator myHeap() const
     {
         return heap_iterator(root);
     }
@@ -479,85 +494,113 @@ private:
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Tree &tree)
+{
+    if (!tree.root)
+        return os;
+
+    sf::RenderWindow window(sf::VideoMode(1000, 800), "Tree Visualization");
+    sf::Font font;
+    if (!font.loadFromFile("arial.ttf"))
     {
-        if (!tree.root)
-            return os;
-
-        sf::RenderWindow window(sf::VideoMode(1000, 800), "Tree Visualization");
-        sf::Font font;
-        if (!font.loadFromFile("arial.ttf"))
-        {
-            std::cerr << "Error loading font\n";
-            return os;
-        }
-
-        const float node_radius = 30.f; // Increased node radius
-        const float horizontal_spacing = 150.f;
-        const float vertical_spacing = 100.f;
-
-        std::map<Node<T> *, sf::Vector2f> positions;
-        positions[tree.root] = sf::Vector2f(window.getSize().x / 2.f, node_radius + 50.f);
-
-        while (window.isOpen())
-        {
-            sf::Event event;
-            while (window.pollEvent(event))
-            {
-                if (event.type == sf::Event::Closed)
-                    window.close();
-            }
-
-            window.clear(sf::Color::White);
-
-            std::queue<Node<T> *> nodes;
-            nodes.push(tree.root);
-
-            while (!nodes.empty())
-            {
-                Node<T> *node = nodes.front();
-                nodes.pop();
-                sf::Vector2f position = positions[node];
-
-                sf::CircleShape circle(node_radius);
-                circle.setFillColor(sf::Color::Green);
-                circle.setPosition(position - sf::Vector2f(node_radius, node_radius));
-                window.draw(circle);
-
-                sf::Text text;
-                text.setFont(font);
-                text.setString(std::to_string(node->get_value()));
-                text.setCharacterSize(16); // Slightly larger text size
-                text.setFillColor(sf::Color::Black);
-                sf::FloatRect text_bounds = text.getLocalBounds();
-                text.setOrigin(text_bounds.left + text_bounds.width / 2.0f, text_bounds.top + text_bounds.height / 2.0f);
-                text.setPosition(position);
-                window.draw(text);
-
-                const auto &children = node->get_children();
-                float child_x_offset = position.x - (children.size() - 1) * horizontal_spacing / 2.f;
-
-                for (size_t i = 0; i < children.size(); ++i)
-                {
-                    Node<T> *child = children[i];
-                    if (child)
-                    {
-                        sf::Vector2f child_position = sf::Vector2f(child_x_offset + i * horizontal_spacing, position.y + vertical_spacing);
-                        positions[child] = child_position;
-                        nodes.push(child);
-
-                        sf::Vertex line[] =
-                            {
-                                sf::Vertex(position, sf::Color::Black),
-                                sf::Vertex(child_position, sf::Color::Black)};
-                        window.draw(line, 2, sf::Lines);
-                    }
-                }
-            }
-
-            window.display();
-        }
+        std::cerr << "Error loading font\n";
         return os;
     }
+
+    const float node_radius = 25.f; // Slightly decreased node radius
+    const float vertical_spacing = 80.f; // Reduced vertical spacing
+    const float initial_horizontal_spacing = 200.f; // Reduced initial horizontal spacing
+
+    std::map<Node<T> *, sf::Vector2f> positions;
+
+    // Recursively position nodes
+    std::function<void(Node<T> *, float, float, float)> position_nodes = [&](Node<T> *node, float x, float y, float horizontal_spacing)
+    {
+        if (!node)
+            return;
+
+        positions[node] = sf::Vector2f(x, y);
+
+        float child_x_offset = x - (node->get_children().size() - 1) * horizontal_spacing / 2.f;
+
+        for (size_t i = 0; i < node->get_children().size(); ++i)
+        {
+            Node<T> *child = node->get_children()[i];
+            if (child)
+            {
+                position_nodes(child, child_x_offset + i * horizontal_spacing, y + vertical_spacing, horizontal_spacing / 2.f);
+            }
+        }
+    };
+
+    position_nodes(tree.root, window.getSize().x / 2.f, node_radius + 50.f, initial_horizontal_spacing);
+
+    while (window.isOpen())
+    {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+                window.close();
+        }
+
+        window.clear(sf::Color::White);
+
+        for (const auto &pair : positions)
+        {
+            Node<T> *node = pair.first;
+            sf::Vector2f position = pair.second;
+
+            sf::CircleShape circle(node_radius);
+            circle.setFillColor(sf::Color::Green);
+            circle.setPosition(position - sf::Vector2f(node_radius, node_radius));
+            window.draw(circle);
+
+            sf::Text text;
+            text.setFont(font);
+            if constexpr (std::is_same<T, std::string>::value)
+            {
+                text.setString(node->get_value());
+            }
+            else if constexpr (std::is_same<T, Complex>::value)
+            {
+                std::ostringstream oss;
+                oss << node->get_value();
+                text.setString(oss.str());
+            }
+            else
+            {
+                text.setString(std::to_string(node->get_value()));
+            }
+            text.setCharacterSize(16); // Slightly larger text size
+            text.setFillColor(sf::Color::Black);
+            sf::FloatRect text_bounds = text.getLocalBounds();
+            text.setOrigin(text_bounds.left + text_bounds.width / 2.0f, text_bounds.top + text_bounds.height / 2.0f);
+            text.setPosition(position);
+            window.draw(text);
+
+            for (Node<T> *child : node->get_children())
+            {
+                if (child)
+                {
+                    sf::Vector2f child_position = positions[child];
+
+                    sf::Vertex line[] =
+                        {
+                            sf::Vertex(position, sf::Color::Black),
+                            sf::Vertex(child_position, sf::Color::Black)};
+                    window.draw(line, 2, sf::Lines);
+                }
+            }
+        }
+
+        window.display();
+    }
+    return os;
+}
+
+
+
+
 
 private:
     Node<T> *root;
