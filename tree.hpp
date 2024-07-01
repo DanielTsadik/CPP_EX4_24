@@ -1,3 +1,4 @@
+// Tsadik88@gmail.com
 #ifndef TREE_HPP
 #define TREE_HPP
 
@@ -424,8 +425,11 @@ public:
     class heap_iterator
     {
     public:
-        explicit heap_iterator(Node<T> *node)
+        explicit heap_iterator(Node<T> *node, size_t k) : k(k)
         {
+            if (k != 2) {
+                throw std::runtime_error("Cannot create heap iterator for non-binary tree"); // Throw error if tree is not binary
+            }
             if (node)
             {
                 collect_nodes(node); // Collect all nodes for heap
@@ -480,16 +484,17 @@ public:
         }
 
         std::vector<Node<T> *> heap_nodes; // Vector for heap nodes
+        size_t k; // Maximum number of children
     };
 
     heap_iterator myHeap() const
     {
-        return heap_iterator(root); // Return heap iterator starting at root
+        return heap_iterator(root, k); // Return heap iterator starting at root
     }
 
     heap_iterator end_heap() const
     {
-        return heap_iterator(nullptr); // Return heap iterator at end
+        return heap_iterator(nullptr, k); // Return heap iterator at end
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Tree &tree)

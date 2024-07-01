@@ -1,7 +1,7 @@
 # Tree and Node Implementation for Hierarchical Data Structures
 
 **Assignment: Tree and Node Implementation**  
-**Email: tsadik88@gmail.com**
+**Email: Tsadik88@gmail.com**
 
 ## Overview
 

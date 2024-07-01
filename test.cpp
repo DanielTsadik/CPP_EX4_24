@@ -84,17 +84,7 @@ TEST_CASE("Testing specific tree structure")
         std::cout << node->get_value() << " ";
         CHECK(node->get_value() == *it++);
     }
-    std::cout << std::endl;
 
-    auto heap_order = {1, 2, 3, 4, 5, 6, 7, 8, 9};
-    it = heap_order.begin();
-    std::cout << "Heap order traversal: ";
-    for (auto node = tree.myHeap(); node != tree.end_heap(); ++node)
-    {
-        std::cout << node->get_value() << " ";
-        CHECK(node->get_value() == *it++);
-    }
-    std::cout << std::endl;
 }
 
 // Test for various data types with non-trivial order
@@ -537,4 +527,19 @@ TEST_CASE("Testing tree destruction")
 
     std::cout << "Tree destroyed." << std::endl;
     // No explicit CHECK here as we're looking for no memory leaks or crashes
+}
+
+TEST_CASE("Testing a non binary tree into a heap") {
+    Node<int> root(1);
+    Node<int> child1(2);
+    Node<int> child2(3);
+    Node<int> child3(4);
+
+    Tree<int> tree(3); // Creating a non-binary tree with k=3
+    tree.add_root(root);
+    tree.add_sub_node(root, child1);
+    tree.add_sub_node(root, child2);
+    tree.add_sub_node(root, child3);
+
+    REQUIRE_THROWS_WITH(tree.myHeap(), "Cannot create heap iterator for non-binary tree"); // This should throw an exception
 }
