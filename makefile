@@ -1,3 +1,4 @@
+## Tsadik88@gmail.com
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall
 LDFLAGS = -lsfml-graphics -lsfml-window -lsfml-system
