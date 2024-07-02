@@ -543,3 +543,68 @@ TEST_CASE("Testing a non binary tree into a heap") {
 
     REQUIRE_THROWS_WITH(tree.myHeap(), "Cannot create heap iterator for non-binary tree"); // This should throw an exception
 }
+
+// Test for a 5 ary tree with doubles that are not sorted
+TEST_CASE("Testing 5-ary tree with doubles that are not sorted")
+{
+    Node<double> root(1.1);
+    Tree<double> tree(5); // 5-ary tree
+
+    tree.add_root(root);
+
+    Node<double> n1(1.2);
+    Node<double> n2(1.3);
+    Node<double> n3(1.8);
+    Node<double> n4(1.5);
+    Node<double> n5(1.6);
+
+    tree.add_sub_node(root, n1);
+    tree.add_sub_node(root, n2);
+    tree.add_sub_node(root, n3);
+    tree.add_sub_node(root, n4);
+    tree.add_sub_node(root, n5);
+
+    Node<double> n6(1.7);
+    Node<double> n7(25.36);
+    Node<double> n8(12.11);
+
+    tree.add_sub_node(n3, n6);
+    tree.add_sub_node(n3, n7);
+    tree.add_sub_node(n6, n8);
+
+    std::cout << "5-ary tree with doubles that are not sorted:" << std::endl;
+    std::cout << tree << std::endl;
+
+    vector<double> expected_pre_order = {1.1, 1.2, 1.3, 1.8, 1.7, 12.11, 25.36, 1.5, 1.6};
+    vector<double> actual_pre_order;
+    cout << "Pre-order traversal: ";
+    for (auto node = tree.begin_pre_order(); node != tree.end_pre_order(); ++node)
+    {
+        cout << node->get_value() << " ";
+        actual_pre_order.push_back(node->get_value());
+    }
+    cout << endl;
+    CHECK(expected_pre_order == actual_pre_order);
+
+    vector<double> expected_post_order = {1.1, 1.2, 1.3, 1.8, 1.7, 12.11, 25.36, 1.5, 1.6};
+    vector<double> actual_post_order;
+    cout << "Post-order traversal: ";
+    for (auto node = tree.begin_post_order(); node != tree.end_post_order(); ++node)
+    {
+        cout << node->get_value() << " ";
+        actual_post_order.push_back(node->get_value());
+    }
+    cout << endl;
+    CHECK(expected_post_order == actual_post_order);
+
+    vector<double> expected_in_order = {1.1, 1.2, 1.3, 1.8, 1.7, 12.11, 25.36, 1.5, 1.6};
+    vector<double> actual_in_order;
+    cout << "In-order traversal: ";
+    for (auto node = tree.begin_in_order(); node != tree.end_in_order(); ++node)
+    {
+        cout << node->get_value() << " ";
+        actual_in_order.push_back(node->get_value());
+    }
+    cout << endl;
+    CHECK(expected_in_order == actual_in_order);
+}

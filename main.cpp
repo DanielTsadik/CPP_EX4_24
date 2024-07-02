@@ -110,11 +110,6 @@ int main() {
         cout << node->get_value() << endl;
     }
 
-    cout << "Heap traversal:" << endl;
-    for (auto node = three_ary_tree.myHeap(); node != three_ary_tree.end_heap(); ++node) {
-        cout << node->get_value() << endl;
-    }
-
     // Visualize the 3-ary tree
     std::cout << "Visualizing 3-ary Tree..." << std::endl;
     std::cout << three_ary_tree << std::endl;
