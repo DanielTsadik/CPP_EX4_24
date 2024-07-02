@@ -2,17 +2,17 @@
 #ifndef TREE_HPP
 #define TREE_HPP
 
-#include <queue> // For BFS iterator
-#include <iostream> // For input-output stream
-#include <stack> // For stack data structure used in iterators
-#include <vector> // For dynamic array used for storing children nodes
-#include <stdexcept> // For throwing exceptions
-#include <algorithm> // For std::make_heap and std::pop_heap in heap iterator
+#include <queue>             // For BFS iterator
+#include <iostream>          // For input-output stream
+#include <stack>             // For stack data structure used in iterators
+#include <vector>            // For dynamic array used for storing children nodes
+#include <stdexcept>         // For throwing exceptions
+#include <algorithm>         // For std::make_heap and std::pop_heap in heap iterator
 #include <SFML/Graphics.hpp> // For tree visualization
-#include "node.hpp" // Including the Node class definition
-#include <map> // For mapping nodes to positions in visualization
-#include "complex.hpp" // For handling complex numbers
-#include <sstream> // For string stream
+#include "node.hpp"          // Including the Node class definition
+#include <map>               // For mapping nodes to positions in visualization
+#include "complex.hpp"       // For handling complex numbers
+#include <sstream>           // For string stream
 
 template <typename T>
 class Tree
@@ -93,7 +93,7 @@ public:
 
     private:
         std::stack<Node<T> *> nodes; // Stack for nodes
-        size_t k; // Maximum number of children
+        size_t k;                    // Maximum number of children
     };
 
     pre_order_iterator begin_pre_order() const
@@ -145,43 +145,54 @@ public:
         {
             if (k == 2)
             {
+                // Binary tree traversal
                 if (!nodes.empty())
                 {
                     Node<T> *node = nodes.top();
                     nodes.pop();
+
+                    // If the stack is not empty, check the parent node
                     if (!nodes.empty())
                     {
                         Node<T> *parent = nodes.top();
+                        // If the current node is the left child, push the leftmost path of the right child
                         if (parent->get_children().size() > 1 && node == parent->get_children()[0])
                         {
-                            pushLeftmostPath(parent->get_children()[1]); // Push leftmost path for right child
+                            pushLeftmostPath(parent->get_children()[1]);
                         }
                     }
+                    // Update the current node to the node that was just popped
                     current = node;
                 }
                 else
                 {
-                    current = nullptr; // End iteration if stack is empty
+                    // End iteration if stack is empty
+                    current = nullptr;
                 }
             }
             else
             {
+                // General tree traversal
                 if (!nodes.empty())
                 {
                     Node<T> *node = nodes.top();
                     nodes.pop();
+
+                    // Push children of the current node in reverse order
                     for (auto it = node->get_children().rbegin(); it != node->get_children().rend(); ++it)
                     {
                         if (*it)
                         {
-                            nodes.push(*it); // Push children in reverse order
+                            nodes.push(*it);
                         }
                     }
+                    // Update the current node to the node that was just popped
                     current = node;
                 }
                 else
                 {
-                    current = nullptr; // End iteration if stack is empty
+                    // End iteration if stack is empty
+                    current = nullptr;
                 }
             }
             return *this;
@@ -189,8 +200,8 @@ public:
 
     private:
         std::stack<Node<T> *> nodes; // Stack for nodes
-        Node<T> *current; // Current node
-        size_t k; // Maximum number of children
+        Node<T> *current;            // Current node
+        size_t k;                    // Maximum number of children
 
         void pushLeftmostPath(Node<T> *node)
         {
@@ -284,7 +295,7 @@ public:
 
     private:
         std::stack<Node<T> *> nodes; // Stack for nodes
-        size_t k; // Maximum number of children
+        size_t k;                    // Maximum number of children
 
         void push_left(Node<T> *node)
         {
@@ -338,6 +349,7 @@ public:
         {
             Node<T> *current = nodes.front();
             nodes.pop();
+            // in this for loop, we push all children to the queue
             for (const auto &child : current->get_children())
             {
                 if (child != nullptr)
@@ -389,6 +401,7 @@ public:
         {
             Node<T> *current = nodes.top();
             nodes.pop();
+            // in this for loop, we push the children in reverse order
             for (auto it = current->get_children().rbegin(); it != current->get_children().rend(); ++it)
             {
                 if (*it != nullptr)
@@ -427,12 +440,13 @@ public:
     public:
         explicit heap_iterator(Node<T> *node, size_t k) : k(k)
         {
-            if (k != 2) {
+            if (k != 2)
+            {
                 throw std::runtime_error("Cannot create heap iterator for non-binary tree"); // Throw error if tree is not binary
             }
             if (node)
             {
-                collect_nodes(node); // Collect all nodes for heap
+                collect_nodes(node);                                                  // Collect all nodes for heap
                 std::make_heap(heap_nodes.begin(), heap_nodes.end(), CompareNodes()); // Create a heap
             }
         }
@@ -484,7 +498,7 @@ public:
         }
 
         std::vector<Node<T> *> heap_nodes; // Vector for heap nodes
-        size_t k; // Maximum number of children
+        size_t k;                          // Maximum number of children
     };
 
     heap_iterator myHeap() const
@@ -510,8 +524,8 @@ public:
             return os;
         }
 
-        const float node_radius = 25.f; // Slightly decreased node radius
-        const float vertical_spacing = 80.f; // Reduced vertical spacing
+        const float node_radius = 25.f;                 // Slightly decreased node radius
+        const float vertical_spacing = 80.f;            // Reduced vertical spacing
         const float initial_horizontal_spacing = 200.f; // Reduced initial horizontal spacing
 
         std::map<Node<T> *, sf::Vector2f> positions;
@@ -588,9 +602,9 @@ public:
                         sf::Vector2f child_position = positions[child];
 
                         sf::Vertex line[] =
-                        {
-                            sf::Vertex(position, sf::Color::Black),
-                            sf::Vertex(child_position, sf::Color::Black)};
+                            {
+                                sf::Vertex(position, sf::Color::Black),
+                                sf::Vertex(child_position, sf::Color::Black)};
                         window.draw(line, 2, sf::Lines);
                     }
                 }
@@ -603,7 +617,7 @@ public:
 
 private:
     Node<T> *root; // Root node of the tree
-    size_t k; // Maximum number of children
+    size_t k;      // Maximum number of children
 
     static void flatten_to_vector(Node<T> *node, std::vector<Node<T> *> &result)
     {
@@ -624,7 +638,7 @@ private:
         {
             delete_tree(child); // Recursively delete children
         }
-        delete node; // Delete current node
+        delete node;    // Delete current node
         node = nullptr; // Set node to null
     }
 
